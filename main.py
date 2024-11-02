@@ -74,3 +74,4 @@ while running:
                 grid = turn(grid, 'down')
             print('tst')
             # print_matrix(grid)
+print('test')
