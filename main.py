@@ -75,3 +75,4 @@ while running:
             print('tst')
             # print_matrix(grid)
 print('test')
+print('test2')
