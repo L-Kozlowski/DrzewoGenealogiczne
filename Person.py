@@ -1,5 +1,5 @@
 class Person(object):
-    def __init__(self, id, name, surename, gender):
+    def __init__(self, id, name, surename, gender, level = 0):
         self.id = id
         self.first_name = name
         self.surename = surename
@@ -8,13 +8,23 @@ class Person(object):
         self.sibling_id = -1
         self.partner_id = -1
         self.gender = gender
+        self.level = level
 
     def get_name(self):
         return self.first_name + " " + self.surename
 
     def set_position(self,x,y, offset : tuple = (0,0)):
-        self.x = x + offset[0]
+        if self.gender == 'M':
+            self.x = x - offset[0]
+        else:
+            self.x = x + offset[0]
         self.y = y - offset[1]
+
+    def move_position(self, site, offset):
+        if site =='l':
+            self.x = self.x - offset[0]
+        else:
+            self.x = self.x + offset[0]
 
 
     def get_position(self):
