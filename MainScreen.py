@@ -17,6 +17,9 @@ class MainScreen(object):
         self.screen_height = info.current_h
 
         self.idx = Index()
+        self.idx.x =  self.screen_width//2
+        self.idx.y =  -self.screen_height//2
+
         self.main_font = pg.font.SysFont('Arial', 26)
         self.small_font = pg.font.SysFont('Arial', 15)
 
