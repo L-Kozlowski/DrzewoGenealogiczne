@@ -30,8 +30,15 @@ class PersonList(object):
             # print(int(row_dict['ChildID']))
 
             p = Person(self.personId.next_id(), row_dict['Name'], row_dict['Surename'], row_dict['Gender'], row_dict['Level'])
-            p.set_child_id(int(row_dict['ChildID']))
-            p.set_sibling_id(int(row_dict['SiblingID']))
+            try:
+                if int(row_dict['ChildID']) != -1:
+                    p.set_child_id(int(row_dict['ChildID']))
+            except ValueError:
+                for child_id in row_dict['ChildID'].split(';'):
+                    p.set_child_id(int(child_id))
+
+            if int(row_dict['SiblingID']) != -1:
+                p.set_sibling_id(int(row_dict['SiblingID']))
             # self.set_persons_position(p, (80,40))
 
             self.persons.append(p)
@@ -43,16 +50,33 @@ class PersonList(object):
             elif (person.x <= 0 and new_person.gender == 'M') or (person.x > 0 and new_person.gender == 'F'):
                 new_person.set_position(*person.get_position(), offset=(2*offset[0], 0))
 
-        elif person.id == new_person.get_child_id() and new_person.get_child_id() != -1: # parent
+        elif person.id == new_person.get_first_child_id() and new_person.not_empty_child_id(): # parent
+            position = person.get_position()
+            if len(new_person.get_child_id_list()) > 1:
+                    min_x = 0
+                    max_x = 0
+                    for childid in new_person.get_child_id_list():
+                        for person in self.persons:
+                            if person.id == childid:
+                                if min_x == 0 or min_x > person.get_position()[0]:
+                                    min_x = person.get_position()[0]
+                                elif min_x == 0 or max_x < person.get_position()[0]:
+                                    max_x = person.get_position()[0]
+                                print(person.get_name(), 'Sibling sum:',min_x, max_x)
+                                break
+                    if (person.x < 0 and new_person.gender == 'M') or (person.x > 0 and new_person.gender == 'F'):
+                        position = (max_x, position[1])
+                    elif (person.x < 0 and new_person.gender == 'F') or (person.x > 0 and new_person.gender == 'M'):
+                        position = (min_x, position[1])
             if person.x < 0 and new_person.gender == 'F':
-                new_person.set_position(*person.get_position(), (0,offset[1]))
+                new_person.set_position(*position, (0,offset[1]))
             elif person.x <= 0 and new_person.gender == 'M':
-                new_person.set_position(*person.get_position(), offset=offset)
+                new_person.set_position(*position, offset=offset)
 
             elif person.x > 0 and new_person.gender == 'M':
-                new_person.set_position(*person.get_position(), (0, offset[1]))
+                new_person.set_position(*position, (0, offset[1]))
             elif person.x >= 0 and new_person.gender == 'F':
-                new_person.set_position(*person.get_position(), offset=offset)
+                new_person.set_position(*position, offset=offset)
 
 
     def print_persons(self):
@@ -87,14 +111,14 @@ class PersonList(object):
                 if person.id == new_person.get_sibling_id():
                     self.set_init_position(person, new_person, offset)
                     self.persons_tmp.append(new_person)
-            elif new_person.get_child_id() == person.id:
+            elif new_person.get_first_child_id() == person.id:
                 self.set_init_position(person, new_person, offset)
                 self.persons_tmp.append(new_person)
                 break
         print("New position: ", new_person.get_name(), new_person.get_position())
 
         for person in self.persons_tmp: # change previous person position
-            not_last_child = person.get_child_id() != -1
+            not_last_child = person.not_empty_child_id
             if person.x <= new_person.x and not_last_child and person.id != new_person.id and new_person.x < 0:
                 print('Move B: ', person.get_name(), person.get_position())
                 person.move_position('l',offset)

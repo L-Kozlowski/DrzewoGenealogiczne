@@ -4,7 +4,7 @@ class Person(object):
         self.first_name = name
         self.surename = surename
         self.x, self.y = 0, 0
-        self.child_id = -1
+        self.child_id = []
         self.sibling_id = -1
         self.partner_id = -1
         self.gender = gender
@@ -34,9 +34,11 @@ class Person(object):
         return self.x + index[0], self.y - index[1]
 
     def set_child_id(self, new_id):
-        self.child_id = new_id
+        self.child_id.append(new_id)
 
-    def get_child_id(self):
+    def get_first_child_id(self):
+        return self.child_id[0]
+    def get_child_id_list(self):
         return self.child_id
 
     def set_sibling_id(self, new_id):
@@ -44,3 +46,10 @@ class Person(object):
 
     def get_sibling_id(self):
         return self.sibling_id
+    def not_empty_child_id(self):
+        return True if len(self.child_id)> 0  else False
+if __name__ == '__main__':
+    obj = Person('1', 'A', 'A', 'F', 2)
+    obj.set_child_id(2)
+    # obj.change_position(obj.persons[3],5)
+    print(obj.not_empty_child_id())

@@ -47,8 +47,8 @@ class MainScreen(object):
             self.screen.blit(text, text_rect)
             # text_width, text_height =  self.small_font.size(person.get_name())
             self.draw_vertical_line(*person.get_position())
-            if person.get_child_id() != -1:
-                vertical_position[person.get_child_id()].append(person.get_position())
+            if person.not_empty_child_id():
+                vertical_position[person.get_first_child_id()].append(person.get_position())
 
         for key in vertical_position.keys():
             self.draw_horizontal_line(*vertical_position[key][0], *vertical_position[key][1])
