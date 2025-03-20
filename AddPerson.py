@@ -1,4 +1,14 @@
 import pygame
+import tkinter as tk
+import ctypes
+
+from tkinter import simpledialog
+
+class RECT(ctypes.Structure):
+    _fields_ = [("left", ctypes.c_long),
+                ("top", ctypes.c_long),
+                ("right", ctypes.c_long),
+                ("bottom", ctypes.c_long)]
 
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
@@ -15,10 +25,7 @@ class InputBox:
             self.active = self.rect.collidepoint(event.pos)
             self.color = self.color_active if self.active else self.color_inactive
         if event.type == pygame.KEYDOWN and self.active:
-            if event.key == pygame.K_RETURN:
-                print(self.text)
-                self.text = ''
-            elif event.key == pygame.K_BACKSPACE:
+            if event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
             else:
                 self.text += event.unicode
@@ -26,7 +33,40 @@ class InputBox:
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect, 2)
-        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+
+
+class AddPersonWindow:
+    def __init__(self, x, y):
+        self.root = tk.Tk()
+        self.root.title("Formularz")
+        self.root.geometry(f"300x200+{x}+{y}")
+
+        tk.Label(self.root, text="Imię:").pack()
+        self.first_name_entry = tk.Entry(self.root)
+        self.first_name_entry.pack()
+
+        tk.Label(self.root, text="Nazwisko:").pack()
+        self.last_name_entry = tk.Entry(self.root)
+        self.last_name_entry.pack()
+
+        tk.Label(self.root, text="ID rodzica:").pack()
+        self.parent_id_entry = tk.Entry(self.root)
+        self.parent_id_entry.pack()
+
+        tk.Button(self.root, text="Commit", command=self.get_commit_values).pack()
+        self.open_input_window()
+
+    def get_commit_values(self):
+        first_name = self.first_name_entry.get()
+        last_name = self.last_name_entry.get()
+        parent_id = self.parent_id_entry.get()
+        print(f"Imię: {first_name}, Nazwisko: {last_name}, ID: {parent_id}")
+        self.root.destroy()
+
+    def open_input_window(self):
+        self.root.mainloop()
+
 
 class MainApp:
     def __init__(self):
@@ -47,43 +87,19 @@ class MainApp:
                     self.running = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_rect.collidepoint(event.pos):
-                        self.open_input_window()
+                        self.open_add_person_window()
             self.clock.tick(30)
         pygame.quit()
 
-    def open_input_window(self):
-        input_screen = pygame.display.set_mode((400, 300))
-        pygame.display.set_caption("Formularz")
-        font = pygame.font.Font(None, 32)
-        labels = ["Imię:", "Nazwisko:", "ID rodzica:"]
-        input_boxes = [
-            InputBox(150, 50, 200, 32),
-            InputBox(150, 100, 200, 32),
-            InputBox(150, 150, 200, 32)
-        ]
-        commit_button = pygame.Rect(150, 200, 100, 40)
-        running = True
-        while running:
-            input_screen.fill((50, 50, 50))
-            for i, box in enumerate(input_boxes):
-                label_surface = font.render(labels[i], True, pygame.Color('white'))
-                input_screen.blit(label_surface, (50, 55 + i * 50))
-                box.draw(input_screen)
-            pygame.draw.rect(input_screen, (0, 255, 0), commit_button)
-            commit_text = font.render("Commit", True, pygame.Color('black'))
-            input_screen.blit(commit_text, (commit_button.x + 15, commit_button.y + 10))
-            pygame.display.flip()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if commit_button.collidepoint(event.pos):
-                        print(f"Imię: {input_boxes[0].text}, Nazwisko: {input_boxes[1].text}, ID: {input_boxes[2].text}")
-                for box in input_boxes:
-                    box.handle_event(event)
-            pygame.time.Clock().tick(30)
-        pygame.display.set_mode((400, 300))  # Przywrócenie głównego okna
+    def get_pygame_window_position(self):
+        hwnd = pygame.display.get_wm_info()['window']
+        rect = RECT()
+        ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
+        return rect.left, rect.top
 
+    def open_add_person_window(self):
+        x, y = self.get_pygame_window_position()
+        add_person_window = AddPersonWindow(x + 50, y + 50)
 
 if __name__ == "__main__":
     app = MainApp()
