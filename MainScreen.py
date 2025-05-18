@@ -4,7 +4,7 @@ from collections import defaultdict
 from pygame.examples.music_drop_fade import draw_text_line
 
 from Index import Index
-from PersonList import PersonList
+from PersonListOld import PersonList
 
 
 class MainScreen(object):

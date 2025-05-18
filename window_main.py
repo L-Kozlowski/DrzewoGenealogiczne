@@ -5,7 +5,7 @@ from person import Person
 from connection_line import ConnectionLine
 from window_add_person import WindowAddPerson
 from window_edit_person import WindowEditPerson
-
+from person_list import PersonList
 
 class WindowMain:
     def __init__(self):
@@ -14,8 +14,9 @@ class WindowMain:
         self.canvas = tk.Canvas(self.root, width=1000, height=800, bg="white")
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
-        self.persons: list[Person] = []
-        self.lines: list[ConnectionLine] = []
+        self.person_list = PersonList(self.canvas)
+        # self.persons: list[Person] = []
+        # self.lines: list[ConnectionLine] = []
 
         self.dragging = None
         self.last_x = 0
@@ -28,9 +29,11 @@ class WindowMain:
         self.setup_ui()
         self.bind_events()
 
-        self.create_person(300, 300, "Adam", "Kowalski")
-        self.create_person(500, 400, "Ania", "Nowak")
-        self.connect_persons(self.persons[0], self.persons[1], color="black")
+        self.person_list.add_to_persons(Person(self.canvas, 300, 300, "Adam", "Kowalski"))
+        self.person_list.add_to_persons(Person(self.canvas, 500, 400, "Ania", "Nowak"))
+        self.person_list.connect_persons(self.person_list.get_persons()[0],
+                                         self.person_list.get_persons()[1], color="black")
+        # self.connect_persons(self.persons[0], self.persons[1], color="black")
         self.view_offset = [0, 0]  # [x, y]
         self.view_cords= [0, 0]  # [x, y]
         self.canvas.tag_lower("line")
@@ -38,7 +41,7 @@ class WindowMain:
 
         self.context_menu = tk.Menu(self.root, tearoff=0)
         self.context_menu.add_command(label="Dodaj nowa osone", command=self.add_connected_person)
-        self.context_menu.add_command(label="Usun osobe", command=self.delete_person)
+        self.context_menu.add_command(label="Usun osobe", command=self.person_list.delete_person)
         self.context_menu.add_command(label="Edytuj osobe", command=self.edit_person)
 
         self.right_click_target = None  # prostokąt kliknięty prawym przyciskiem
@@ -77,6 +80,7 @@ class WindowMain:
             return
 
         self.selected_person = person
+        self.person_list.set_selected_person(person)
         self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def on_mouse_down(self, event):
@@ -88,6 +92,7 @@ class WindowMain:
                 # coords = person.get_center()
                 # self.pending_new_window.show_selection(coords)
                 self.pending_new_window.selected(person)
+                self.person_list.set_selected_person(self.selected_person)
             else:
                 self.dragging = person
                 self.last_x = event.x
@@ -107,7 +112,7 @@ class WindowMain:
             self.view_cords[0] -= self.view_offset[0]
             self.view_cords[1] -= self.view_offset[1]
 
-            for person in self.persons:
+            for person in self.person_list.get_persons(): #self.persons
                 person.move_display(self.view_offset[0],self.view_offset[1])
                 for conn in person.connections:
                     conn.update()
@@ -132,62 +137,62 @@ class WindowMain:
         self.dragging = None
 
     def reset_view(self):
-        for person in self.persons:
+        for person in self.person_list.get_persons(): #self.persons:
             person.reset_display()
-        self.update_all_lines()
+        self.person_list.update_all_lines()
         self.view_cords = [0,0]
 
-    def update_all_lines(self):
-        for line in self.lines:
-            line.update()
+    # def update_all_lines(self):
+    #     for line in self.lines:
+    #         line.update()
 
     def update_coordinates(self, event):
         x, y = self.view_cords
         self.coord_label.config(text=f"Widok: x={int(x)}, y={int(y)}")
 
     def start_add_person(self):
-        self.pending_new_window = WindowAddPerson(self.root, self)
+        self.pending_new_window = WindowAddPerson(self.root, self, self.canvas, self.person_list)
 
     def add_connected_person(self):
         if self.selected_person:
-            self.pending_new_window = WindowAddPerson(self.root, self)
+            self.pending_new_window = WindowAddPerson(self.root, self, self.canvas, self.person_list)
             self.pending_new_window.selected(self.selected_person)
+            self.person_list.set_selected_person(self.selected_person)
 
     def get_clicked_person(self, event) -> Optional[Person]:
         clicked = self.canvas.find_overlapping(event.x, event.y, event.x, event.y)
         clicked_ids = set(clicked)
 
-        for person in self.persons:
+        for person in self.person_list.get_persons(): #self.persons:
             if person.check_if_clicked(clicked_ids):
                 return person
         return None
 
-    def create_person(self, x, y, name="Name", surname='Surname') -> Person:
-        person = Person(self.canvas, x, y, name,surname)
-        self.persons.append(person)
-        return person
+    # def add_to_persons(self, person: Person):
+    #     self.persons.append(person)
+    #
 
-    def connect_persons(self, r1: Person, r2: Person, color="black"):
-        line = ConnectionLine(self.canvas, r1, r2, color=color)
-        self.canvas.tag_lower("line")
-        self.lines.append(line)
+    # def connect_persons(self, r1: Person, r2: Person, color="black"):
+    #     line = ConnectionLine(self.canvas, r1, r2, color=color)
+    #     self.canvas.tag_lower("line")
+    #     self.lines.append(line)
 
-    def delete_person(self):
-
-        # validation
-        if len(self.selected_person.connections) > 1:
-            print("To many connections")
-        elif len(self.persons) == 1:
-            print("You cannot delete last one") 
-        else:
-            # delete person
-            selected_person = self.selected_person
-            selected_person.delete_canvas()
-            self.persons.remove(selected_person)
-
-            # delete connected lines
-            for line in selected_person.connections:
-                 line.delete()
+    # def delete_person(self):
+    #
+    #     # validation
+    #     if len(self.selected_person.connections) > 1:
+    #         print("To many connections")
+    #     elif len(self.persons) == 1:
+    #         print("You cannot delete last one")
+    #     else:
+    #         # delete person
+    #         selected_person = self.selected_person
+    #         selected_person.delete_canvas()
+    #         self.persons.remove(selected_person)
+    #
+    #         # delete connected lines
+    #         for line in selected_person.connections:
+    #              line.delete()
         
 
 
